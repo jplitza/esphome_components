@@ -70,11 +70,13 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
             char *line_ptr = buf;
             for (char *parity_ptr = buf; parity_ptr - buf < len; ++parity_ptr) {
                 if (parity(*parity_ptr)) {
-                    ESP_LOGD(
-                        "OBIS",
-                        "Parity error at character %d, ignoring until next newline",
-                        parity_ptr - buf);
-                    parity_error = true;
+                    if (!parity_error) {
+                        ESP_LOGD(
+                            "OBIS",
+                            "Parity error at character %d, ignoring until next newline",
+                            parity_ptr - buf);
+                        parity_error = true;
+                    }
                     continue;
                 }
 
