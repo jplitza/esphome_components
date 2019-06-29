@@ -156,12 +156,24 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                         ESP_LOGW(
                             "OBIS",
                             "Unit of measurement mismatch for field '%s': "
-                            "'%s' is configured, but '%s' was sent",
+                            "'%s' is configured, but '%s' was sent. "
+                            "Ignoring measurement.",
                             field,
                             sensor.second->get_unit_of_measurement().c_str(),
                             unit);
+                        return true;
                     }
-                    sensor.second->publish_state(strtod(value, NULL));
+                    char *remain;
+                    double fvalue = strtod(value, &remain);
+                    if (*remain != '\0') {
+                        ESP_LOGW(
+                            "OBIS",
+                            "Format error: Non-numeric value: %s. "
+                            "Ignoring measurement.",
+                            value);
+                        return true;
+                    }
+                    sensor.second->publish_state(fvalue);
                 }
             }
 
