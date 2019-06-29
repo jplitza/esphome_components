@@ -17,7 +17,7 @@ See [1, page 20] for documentation of fields.
 [1] https://www.easymeter.com/downloads/products/zaehler/Q3D/Easymeter_Q3D_DE_2016-06-15.pdf
 */
 
-#define OBIS_SCANF "%23[0-9A-Z:.*-](%63[^)])%*[\r\n]%n"
+#define OBIS_SCANF "%23[0-9A-Z:.*-](%63[^)])%n"
 #define OBIS_BUFSIZE 512
 
 static inline bool parity(byte v) {
@@ -58,52 +58,62 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
             if (len == 0)
                 return;
 
-            for (size_t i = 0; i < len; i++) {
-                if (parity(buf[i])) {
+            buf[len] = '\0';
+
+            bool parity_error = false;
+            char *line_ptr = buf;
+            for (char *parity_ptr = buf; parity_ptr - buf < len; ++parity_ptr) {
+                if (parity(*parity_ptr)) {
                     ESP_LOGD(
                         "OBIS",
-                        "Parity error at character %d",
-                        i);
-                    return;
+                        "Parity error at character %d, ignoring until next newline",
+                        parity_ptr - buf);
+                    parity_error = true;
+                    continue;
                 }
 
                 // mask out parity bit
-                buf[i] &= 0x7f;
-            }
-            buf[len] = '\0';
-            ESP_LOGV("OBIS", "Received: %s", buf);
+                *parity_ptr &= 0x7f;
 
-            if (buf[0] != '/') {
-                ESP_LOGD(
+                if (*parity_ptr == '\n' || *parity_ptr == '\r') {
+                    if (!parity_error) {
+                        ESP_LOGVV("OBIS", "Received: '%s'", line_ptr);
+                        *parity_ptr = '\0';
+                        if (!this->handle_line(line_ptr))
+                            break;
+                    }
+                    parity_error = false;
+                    line_ptr = parity_ptr + 1;
+                }
+            }
+        }
+
+        bool handle_line(char *line) {
+            if (line == NULL) {
+                ESP_LOGW(
                     "OBIS",
-                    "Invalid starting character (%02x)",
-                    buf[0]);
-                return;
+                    "handle_line() called with NULL pointer");
+                return false;
             }
 
-            char *ptr = strchr(buf, '\r');
-            if (ptr == NULL) {
-                ESP_LOGD(
-                    "OBIS",
-                    "Missing newline (last byte: %02x)",
-                    buf[len-1]);
-                return;
+            switch(line[0]) {
+                case '\0': // ignore empty lines
+                case '/':  // ignore introduction line
+                    return true;
+                case '!': // abort parsing on terminating line
+                    return false;
             }
-
-            do {
-                ptr++;
-            } while (*ptr == '\r' || *ptr == '\n');
 
             char field[24];
             char value[64];
             int matched_len;
-            while (*ptr != '!' && *ptr != '\0' && sscanf(ptr, OBIS_SCANF, field, value, &matched_len) == 2) {
+            if (sscanf(line, OBIS_SCANF, field, value, &matched_len) == 2) {
                 ESP_LOGD(
                     "OBIS",
-                    "Found field %s with value %s",
+                    "Found field '%s' with value '%s'",
                     field,
                     value);
-                ptr += matched_len;
+
                 for (const auto &req_field : this->fields) {
                     if (!req_field.compare(field)) {
                         float fvalue;
@@ -118,17 +128,18 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                         this->sensors[req_field]->publish_state(fvalue);
                     }
                 }
-            }
-            if (!sscanf(ptr, "!%*[\r\n]")) {
-                ESP_LOGD(
+                if (*(line + matched_len) != '\0') {
+                    ESP_LOGW(
+                        "OBIS",
+                        "Trailing line: '%s'",
+                        line + matched_len);
+                }
+            } else {
+                ESP_LOGW(
                     "OBIS",
-                    "Missing ! terminator line");
+                    "Unknown line: '%s'",
+                    line);
             }
-            if (*ptr != '\0') {
-                ESP_LOGD(
-                    "OBIS",
-                    "Remaining message: %s",
-                    ptr);
-            }
+            return true;
         }
 };
