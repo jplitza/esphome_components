@@ -1,10 +1,17 @@
 # OBIS power meter sensor
 
-Reads the D0 interface of an EasyMeter Q3D (and probably others).
+[ESPHome] component that reads the D0 interface of an EasyMeter Q3D (and
+probably others) via the hardware UART interface of an ESP8266.
+
+[ESPHome]: https://esphome.io/
 
 ## Config
 
-```
+```yaml
+esphome:
+  includes:
+    - obis_sensor.h
+
 logger:
   baud_rate: 9600
 
