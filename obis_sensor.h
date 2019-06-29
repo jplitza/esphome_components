@@ -66,7 +66,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
             for (char *parity_ptr = buf; parity_ptr - buf < len; ++parity_ptr) {
                 if (parity(*parity_ptr)) {
                     if (!parity_error) {
-                        ESP_LOGD(
+                        ESP_LOGI(
                             "OBIS",
                             "Parity error at character %d, ignoring until next newline",
                             parity_ptr - buf);
@@ -94,7 +94,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
         bool handle_line(char *line) {
             char *value, *unit, *trailer, *field = line;
             if (line == NULL) {
-                ESP_LOGW(
+                ESP_LOGE(
                     "OBIS",
                     "handle_line() called with NULL pointer");
                 return false;
@@ -112,7 +112,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
             if (value == NULL) {
                 ESP_LOGW(
                     "OBIS",
-                    "Missing value: '%s'",
+                    "Format error: Missing opening bracket: '%s'",
                     line);
                 return true;
             }
@@ -123,7 +123,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
             if (trailer == NULL) {
                 ESP_LOGW(
                     "OBIS",
-                    "Missing closing bracket: '%s'",
+                    "Format error: Missing closing bracket: '%s'",
                     line);
                 return true;
             }
@@ -139,7 +139,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
             if (*trailer != '\0') {
                 ESP_LOGW(
                     "OBIS",
-                    "Trailing line: '%s'",
+                    "Format error: Trailing line: '%s'",
                     trailer);
             }
 
