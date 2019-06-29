@@ -38,6 +38,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
 
     public:
         OBISSensor(uart::UARTComponent *parent, std::vector<std::string> fields) : uart::UARTDevice(parent) {
+            // we need to store the actual vector so the order is preserved
             this->fields = fields;
             for (const auto &field : fields) {
                 sensors[field] = new Sensor();
@@ -45,6 +46,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
         }
 
         auto get_sensors() {
+            // output in order that the fields were given to constructor
             std::vector<sensor::Sensor *> sensor_vector = {};
             for (const auto &field : this->fields) {
                 sensor_vector.push_back(this->sensors[field]);
@@ -118,18 +120,9 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                     field,
                     value);
 
-                for (const auto &req_field : this->fields) {
-                    if (!req_field.compare(field)) {
-                        float fvalue;
-                        if (sscanf(value, "%f", &fvalue) != 1) {
-                            ESP_LOGD(
-                                "OBIS",
-                                "Cannot convert value %s of field %s to float",
-                                value,
-                                field
-                            );
-                        }
-                        this->sensors[req_field]->publish_state(fvalue);
+                for (const auto &sensor : this->sensors) {
+                    if (!sensor.first.compare(field)) {
+                        sensor.second->publish_state(strtod(value, NULL));
                     }
                 }
                 if (*(line + matched_len) != '\0') {
