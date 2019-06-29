@@ -17,12 +17,7 @@ See [1, page 20] for documentation of fields.
 [1] https://www.easymeter.com/downloads/products/zaehler/Q3D/Easymeter_Q3D_DE_2016-06-15.pdf
 */
 
-#define STR(x) #x
-#define XSTR(x) STR(x)
 #define OBIS_BUFSIZE 512
-#define OBIS_FIELDLEN 23
-#define OBIS_VALUELEN 63
-#define OBIS_SCANF "%" XSTR(OBIS_FIELDLEN) "[0-9A-Z:.*-](%" XSTR(OBIS_VALUELEN) "[^)])%n"
 
 static inline bool parity(byte v) {
     // source: http://www.graphics.stanford.edu/~seander/bithacks.html#ParityParallel
@@ -97,6 +92,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
         }
 
         bool handle_line(char *line) {
+            char *value, *unit, *trailer, *field = line;
             if (line == NULL) {
                 ESP_LOGW(
                     "OBIS",
@@ -112,33 +108,63 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                     return false;
             }
 
-            char field[OBIS_FIELDLEN + 1];
-            char value[OBIS_VALUELEN + 1];
-            int matched_len;
-            if (sscanf(line, OBIS_SCANF, field, value, &matched_len) == 2) {
-                ESP_LOGD(
-                    "OBIS",
-                    "Found field '%s' with value '%s'",
-                    field,
-                    value);
-
-                for (const auto &sensor : this->sensors) {
-                    if (!sensor.first.compare(field)) {
-                        sensor.second->publish_state(strtod(value, NULL));
-                    }
-                }
-                if (*(line + matched_len) != '\0') {
-                    ESP_LOGW(
-                        "OBIS",
-                        "Trailing line: '%s'",
-                        line + matched_len);
-                }
-            } else {
+            value = strchr(line, '(');
+            if (value == NULL) {
                 ESP_LOGW(
                     "OBIS",
-                    "Unknown line: '%s'",
+                    "Missing value: '%s'",
                     line);
+                return true;
             }
+
+            unit = strchr(value, '*');
+
+            trailer = strchr(unit != NULL? unit : value, ')');
+            if (trailer == NULL) {
+                ESP_LOGW(
+                    "OBIS",
+                    "Missing closing bracket: '%s'",
+                    line);
+                return true;
+            }
+
+            *(value++) = '\0';
+            if (unit == NULL) {
+                unit = trailer;
+            } else {
+                *(unit++) = '\0';
+            }
+            *(trailer++) = '\0';
+
+            if (*trailer != '\0') {
+                ESP_LOGW(
+                    "OBIS",
+                    "Trailing line: '%s'",
+                    trailer);
+            }
+
+            ESP_LOGD(
+                "OBIS",
+                "Found field '%s' with value '%s' and unit '%s'",
+                line,
+                value,
+                unit);
+
+            for (const auto &sensor : this->sensors) {
+                if (!sensor.first.compare(field)) {
+                    if (sensor.second->get_unit_of_measurement().compare(unit)) {
+                        ESP_LOGW(
+                            "OBIS",
+                            "Unit of measurement mismatch for field '%s': "
+                            "'%s' is configured, but '%s' was sent",
+                            field,
+                            sensor.second->get_unit_of_measurement().c_str(),
+                            unit);
+                    }
+                    sensor.second->publish_state(strtod(value, NULL));
+                }
+            }
+
             return true;
         }
 };
