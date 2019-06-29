@@ -17,8 +17,12 @@ See [1, page 20] for documentation of fields.
 [1] https://www.easymeter.com/downloads/products/zaehler/Q3D/Easymeter_Q3D_DE_2016-06-15.pdf
 */
 
-#define OBIS_SCANF "%23[0-9A-Z:.*-](%63[^)])%n"
+#define STR(x) #x
+#define XSTR(x) STR(x)
 #define OBIS_BUFSIZE 512
+#define OBIS_FIELDLEN 23
+#define OBIS_VALUELEN 63
+#define OBIS_SCANF "%" XSTR(OBIS_FIELDLEN) "[0-9A-Z:.*-](%" XSTR(OBIS_VALUELEN) "[^)])%n"
 
 static inline bool parity(byte v) {
     // source: http://www.graphics.stanford.edu/~seander/bithacks.html#ParityParallel
@@ -104,8 +108,8 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                     return false;
             }
 
-            char field[24];
-            char value[64];
+            char field[OBIS_FIELDLEN + 1];
+            char value[OBIS_VALUELEN + 1];
             int matched_len;
             if (sscanf(line, OBIS_SCANF, field, value, &matched_len) == 2) {
                 ESP_LOGD(
