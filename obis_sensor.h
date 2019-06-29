@@ -82,8 +82,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                     if (!parity_error) {
                         ESP_LOGVV("OBIS", "Received: '%s'", line_ptr);
                         *parity_ptr = '\0';
-                        if (!this->handle_line(line_ptr))
-                            break;
+                        this->handle_line(line_ptr);
                     }
                     parity_error = false;
                     line_ptr = parity_ptr + 1;
@@ -91,21 +90,21 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
             }
         }
 
-        bool handle_line(char *line) {
+        void handle_line(char *line) {
             char *value, *unit, *trailer, *field = line;
             if (line == NULL) {
                 ESP_LOGE(
                     "OBIS",
                     "handle_line() called with NULL pointer");
-                return false;
+                return;
             }
 
             switch(line[0]) {
                 case '\0': // ignore empty lines
                 case '/':  // ignore introduction line
-                    return true;
+                    return;
                 case '!': // abort parsing on terminating line
-                    return false;
+                    return;
             }
 
             value = strchr(line, '(');
@@ -114,7 +113,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                     "OBIS",
                     "Format error: Missing opening bracket: '%s'",
                     line);
-                return true;
+                return;
             }
 
             unit = strchr(value, '*');
@@ -125,7 +124,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                     "OBIS",
                     "Format error: Missing closing bracket: '%s'",
                     line);
-                return true;
+                return;
             }
 
             *(value++) = '\0';
@@ -161,7 +160,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                             field,
                             sensor.second->get_unit_of_measurement().c_str(),
                             unit);
-                        return true;
+                        return;
                     }
                     char *remain;
                     double fvalue = strtod(value, &remain);
@@ -171,12 +170,10 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
                             "Format error: Non-numeric value: %s. "
                             "Ignoring measurement.",
                             value);
-                        return true;
+                        return;
                     }
                     sensor.second->publish_state(fvalue);
                 }
             }
-
-            return true;
         }
 };
