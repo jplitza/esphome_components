@@ -26,7 +26,7 @@ static inline bool parity(char v) {
     return (0x6996 >> v) & 1;
 }
 
-class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
+class OBISSensor : public Component, public uart::UARTDevice {
     protected:
         std::vector<std::string> fields;
         std::map<std::string, sensor::Sensor *> sensors;
