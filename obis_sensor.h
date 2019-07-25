@@ -50,7 +50,7 @@ class OBISSensor : public Component, public uart::UARTDevice {
         }
 
         void setup() override {
-            Serial.setTimeout(100);
+            Serial.setTimeout(10);
         }
 
         void loop() override {
