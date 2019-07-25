@@ -19,7 +19,7 @@ See [1, page 20] for documentation of fields.
 
 #define OBIS_BUFSIZE 512
 
-static inline bool parity(byte v) {
+static inline bool parity(char v) {
     // source: http://www.graphics.stanford.edu/~seander/bithacks.html#ParityParallel
     v ^= v >> 4;
     v &= 0xf;
@@ -40,7 +40,7 @@ class OBISSensor : public Component, public uart::UARTDevice, public Sensor {
             }
         }
 
-        auto get_sensors() {
+        std::vector<sensor::Sensor *> get_sensors() {
             // output in order that the fields were given to constructor
             std::vector<sensor::Sensor *> sensor_vector = {};
             for (const auto &field : this->fields) {
