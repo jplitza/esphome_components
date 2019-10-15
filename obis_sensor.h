@@ -30,6 +30,8 @@ class OBISSensor : public Component, public uart::UARTDevice {
     protected:
         std::vector<std::string> fields;
         std::map<std::string, sensor::Sensor *> sensors;
+        unsigned int parity_errors = 0;
+        sensor::Sensor *parity_error_sensor = new Sensor();
 
     public:
         OBISSensor(uart::UARTComponent *parent, std::vector<std::string> fields) : uart::UARTDevice(parent) {
@@ -49,6 +51,10 @@ class OBISSensor : public Component, public uart::UARTDevice {
             return sensor_vector;
         }
 
+        sensor::Sensor *get_parity_error_sensor() {
+            return this->parity_error_sensor;
+        }
+
         void setup() override {
             Serial.setTimeout(10);
         }
@@ -65,6 +71,7 @@ class OBISSensor : public Component, public uart::UARTDevice {
             char *line_ptr = buf;
             for (char *parity_ptr = buf; parity_ptr - buf < len; ++parity_ptr) {
                 if (parity(*parity_ptr)) {
+                    this->parity_errors++;
                     if (!parity_error) {
                         ESP_LOGI(
                             "OBIS",
@@ -88,6 +95,7 @@ class OBISSensor : public Component, public uart::UARTDevice {
                     line_ptr = parity_ptr + 1;
                 }
             }
+            this->parity_error_sensor->publish_state(this->parity_errors);
         }
 
         void handle_line(char *line) {
