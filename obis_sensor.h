@@ -19,19 +19,10 @@ See [1, page 20] for documentation of fields.
 
 #define OBIS_BUFSIZE 512
 
-static inline bool parity(char v) {
-    // source: http://www.graphics.stanford.edu/~seander/bithacks.html#ParityParallel
-    v ^= v >> 4;
-    v &= 0xf;
-    return (0x6996 >> v) & 1;
-}
-
 class OBISSensor : public Component, public uart::UARTDevice {
     protected:
         std::vector<std::string> fields;
         std::map<std::string, sensor::Sensor *> sensors;
-        sensor::Sensor *parity_error_sensor = new Sensor();
-        sensor::Sensor *bytes_read_sensor = new Sensor();
 
     public:
         OBISSensor(uart::UARTComponent *parent, std::vector<std::string> fields) : uart::UARTDevice(parent) {
@@ -51,59 +42,23 @@ class OBISSensor : public Component, public uart::UARTDevice {
             return sensor_vector;
         }
 
-        sensor::Sensor *get_parity_error_sensor() {
-            return this->parity_error_sensor;
-        }
-
-        sensor::Sensor *get_bytes_read_sensor() {
-            return this->bytes_read_sensor;
-        }
-
         void setup() override {
             Serial.setTimeout(100);
         }
 
         void loop() override {
             char buf[OBIS_BUFSIZE];
-            unsigned int parity_errors = 0;
-            size_t len = Serial.readBytes(buf, OBIS_BUFSIZE - 1);
+            size_t len = Serial.readBytesUntil('\n', buf, OBIS_BUFSIZE - 1);
             if (len == 0)
                 return;
 
-            ESP_LOGVV("OBIS", "Read %d bytes from serial", len);
-            this->bytes_read_sensor->publish_state(len);
-
             buf[len] = '\0';
+            if (buf[len-1] == '\r')
+                buf[len-1] = '\0';
 
-            bool parity_error = false;
-            char *line_ptr = buf;
-            for (char *parity_ptr = buf; parity_ptr - buf < len; ++parity_ptr) {
-                if (parity(*parity_ptr)) {
-                    parity_errors++;
-                    if (!parity_error) {
-                        ESP_LOGI(
-                            "OBIS",
-                            "Parity error at character %d, ignoring until next newline",
-                            parity_ptr - buf);
-                        parity_error = true;
-                    }
-                    continue;
-                }
+            ESP_LOGVV("OBIS", "Received: '%s'", line_ptr);
 
-                // mask out parity bit
-                *parity_ptr &= 0x7f;
-
-                if (*parity_ptr == '\n' || *parity_ptr == '\r') {
-                    if (!parity_error) {
-                        ESP_LOGVV("OBIS", "Received: '%s'", line_ptr);
-                        *parity_ptr = '\0';
-                        this->handle_line(line_ptr);
-                    }
-                    parity_error = false;
-                    line_ptr = parity_ptr + 1;
-                }
-            }
-            this->parity_error_sensor->publish_state(parity_errors);
+            this->handle_line(buf);
         }
 
         void handle_line(char *line) {
