@@ -13,12 +13,14 @@ esphome:
     - obis_sensor.h
 
 logger:
-  baud_rate: 9600
+  baud_rate: 0
 
 uart:
   id: uart_bus
   rx_pin: GPIO3
   baud_rate: 9600
+  data_bits: 7
+  parity: ODD
 
 sensor:
   - platform: custom
