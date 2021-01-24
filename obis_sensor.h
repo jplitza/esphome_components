@@ -43,12 +43,12 @@ class OBISSensor : public Component, public uart::UARTDevice {
         }
 
         void setup() override {
-            Serial.setTimeout(100);
+            setTimeout(100);
         }
 
         void loop() override {
             char buf[OBIS_BUFSIZE];
-            size_t len = Serial.readBytesUntil('\n', buf, OBIS_BUFSIZE - 1);
+            size_t len = readBytesUntil('\n', buf, OBIS_BUFSIZE - 1);
             if (len == 0)
                 return;
 
@@ -56,7 +56,7 @@ class OBISSensor : public Component, public uart::UARTDevice {
             if (buf[len-1] == '\r')
                 buf[len-1] = '\0';
 
-            ESP_LOGVV("OBIS", "Received: '%s'", line_ptr);
+            ESP_LOGVV("OBIS", "Received: '%s'", buf);
 
             this->handle_line(buf);
         }
