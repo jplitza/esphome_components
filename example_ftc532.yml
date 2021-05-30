@@ -1,0 +1,116 @@
+# Teekar Curtain Switch
+# GPIO  inv?    Copomponent
+# 0     yes     LED Up Blue
+# 1     yes     LED Down Blue
+# 2     yes     LED Pause Red
+# 3             ???
+# 4     yes     LED Up Green
+# 5             Relay Down
+# 12            ???
+# 13    yes     LED Pause Green
+# 14            Buttons (with some digital protocol)
+#               https://github.com/arendst/Tasmota/discussions/10185
+# 15            Relay Up
+# 16    yes     LED Pause Blue
+
+
+esphome:
+  name: shutter
+  platform: ESP8266
+  board: esp01_1m
+  on_boot:
+    then:
+      - output.turn_off: pause_green
+
+external_components:
+  - source: github://jplitza/esphome_components
+
+ota:
+  # recommended because flashing fails when using the ftc532 component, and this
+  # way you don't have to try as many times
+  num_attempts: 3
+
+ftc532:
+  pin: GPIO14
+
+binary_sensor:
+  - id: down_button
+    platform: ftc532
+    channel: 0
+    on_press:
+      then:
+        - cover.close: cover1
+  - id: stop_button
+    platform: ftc532
+    channel: 1
+    on_press:
+      then:
+        - cover.stop: cover1
+  - id: up_button
+    platform: ftc532
+    channel: 2
+    on_press:
+      then:
+        - cover.open: cover1
+
+output:
+  - platform: gpio
+    pin: GPIO0
+    inverted: True
+    id: up_blue
+  - platform: gpio
+    pin: GPIO1
+    inverted: True
+    id: down_blue
+  - platform: gpio
+    pin: GPIO2
+    inverted: True
+    id: pause_red
+  - platform: gpio
+    pin: GPIO4
+    inverted: True
+    id: up_green
+  - platform: gpio
+    pin: GPIO13
+    inverted: True
+    id: pause_green
+
+status_led:
+  id: pause_blue
+  pin:
+    number: GPIO16
+    inverted: True
+
+switch:
+  - platform: gpio
+    pin: GPIO15
+    id: down
+    restore_mode: ALWAYS_OFF
+    interlock: [up]
+    interlock_wait_time: 0.5s
+  - platform: gpio
+    pin: GPIO5
+    id: up
+    restore_mode: ALWAYS_OFF
+    interlock: [down]
+    interlock_wait_time: 0.5s
+
+cover:
+  - platform: time_based
+    name: 'Curtain'
+    id: cover1
+    device_class: blind
+
+    open_action:
+      - switch.turn_off: down
+      - switch.turn_on: up
+    open_duration: 32s
+
+    close_action:
+      - switch.turn_off: up
+      - switch.turn_on: down
+    close_duration: 30s
+
+    stop_action:
+      - switch.turn_off: up
+      - switch.turn_off: down
