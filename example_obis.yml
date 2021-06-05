@@ -1,0 +1,46 @@
+external_components:
+  - source: github://jplitza/esphome_components
+
+logger:
+  baud_rate: 0
+
+uart:
+  id: uart_bus
+  rx_pin: GPIO3
+  baud_rate: 9600
+  data_bits: 7
+  parity: ODD
+
+obis:
+  uart_id: uart_bus
+
+sensor:
+  - platform: obis
+    channel: "1-0:1.8.0*255"
+    name: "Power Meter"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 7
+
+  - platform: obis
+    channel: "1-0:21.7.255*255"
+    name: "Phase 1 Power"
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+
+  - platform: obis
+    channel: "1-0:41.7.255*255"
+    name: "Phase 2 Power"
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+
+  - platform: obis
+    channel: "1-0:61.7.255*255"
+    name: "Phase 3 Power"
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+
+  - platform: obis
+    channel: "1-0:1.7.255*255"
+    name: "Total Power"
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
