@@ -25,4 +25,7 @@ def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     yield cg.register_component(var, config)
 
+    pin = yield cg.gpio_pin_expression(config[CONF_PIN])
+    cg.add(var.set_pin(pin))
+
     cg.add(var.set_debounce(config[CONF_DEBOUNCE]))
