@@ -7,12 +7,12 @@ namespace obis {
 static const char *TAG = "obis";
 
 void OBISComponent::setup() {
-  Serial.setTimeout(100);
+  setTimeout(100);
 }
 
 void OBISComponent::loop() {
   char buf[OBIS_BUFSIZE];
-  size_t len = Serial.readBytesUntil('\n', buf, OBIS_BUFSIZE - 1);
+  size_t len = readBytesUntil('\n', buf, OBIS_BUFSIZE - 1);
   if (len == 0)
     return;
 
@@ -20,7 +20,7 @@ void OBISComponent::loop() {
   if (buf[len-1] == '\r')
     buf[len-1] = '\0';
 
-  ESP_LOGVV(TAG, "Received: '%s'", line_ptr);
+  ESP_LOGVV(TAG, "Received: '%s'", buf);
 
   this->handle_line(buf);
 }
