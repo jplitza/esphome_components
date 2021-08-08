@@ -28,3 +28,7 @@ some cheap wall switches.
 
 I'm successfully using it with a Teekar Curtain Switch, which is also what the
 [example configuration](example_ftc532.yml) is tailored for.
+
+# License
+
+All components are licensed under [GPL v3](LICENSE).

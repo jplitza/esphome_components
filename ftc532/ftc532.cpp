@@ -1,6 +1,6 @@
 /*
-  xdrv_47_ftc532.ino - FTC532 touch buttons support for ESPHome
-  (originally for Tasmota)
+  ftc532.cpp - FTC532 touch buttons support for ESPHome
+  (originally xdrv_47_ftc532.ino for Tasmota)
 
   Copyright (C) 2021  Jan-Philipp Litza (for ESPHome adaptation)
   Copyright (C) 2021  Peter Franck and Theo Arends
