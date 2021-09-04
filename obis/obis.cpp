@@ -30,6 +30,9 @@ void OBISComponent::setup() {
 }
 
 void OBISComponent::loop() {
+  if (!available())
+    return;
+
   char buf[OBIS_BUFSIZE];
   size_t len = readBytesUntil('\n', buf, OBIS_BUFSIZE - 1);
   if (len == 0)
