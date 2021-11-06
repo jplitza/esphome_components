@@ -14,7 +14,7 @@ MULTI_CONF = True
 CONFIG_SCHEMA = (
     cv.Schema(
         {
-            cv.GenerateID() : cv.declare_id(OBISComponent),
+            cv.GenerateID(): cv.declare_id(OBISComponent),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)
