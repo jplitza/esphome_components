@@ -25,26 +25,30 @@ namespace obis {
 
 static const char *TAG = "obis";
 
-void OBISComponent::setup() {
-  setTimeout(100);
-}
-
 void OBISComponent::loop() {
-  if (!available())
-    return;
+  while (this->available()) {
+    uint8_t byte;
+    this->read_byte(&byte);
 
-  char buf[OBIS_BUFSIZE];
-  size_t len = readBytesUntil('\n', buf, OBIS_BUFSIZE - 1);
-  if (len == 0)
-    return;
+    if (this->index >= OBIS_BUFSIZE || byte == '/') {
+      this->index = 0;
+    }
+    this->buf[this->index] = (char) byte;
+    this->index++;
 
-  buf[len] = '\0';
-  if (buf[len-1] == '\r')
-    buf[len-1] = '\0';
+    if (byte == '\n') {
+      this->buf[this->index - 1] = '\0';
 
-  ESP_LOGVV(TAG, "Received: '%s'", buf);
+      if (this->buf[this->index - 2] == '\r')
+        this->buf[this->index - 2] = '\0';
 
-  this->handle_line(buf);
+      ESP_LOGVV(TAG, "Received: '%s'", this->buf);
+      this->handle_line(this->buf);
+      
+      this->index = 0;
+      break;
+    }
+  }  // available
 }
 
 void OBISComponent::handle_line(char *line) {
@@ -57,8 +61,7 @@ void OBISComponent::handle_line(char *line) {
   switch(line[0]) {
     case '\0': // ignore empty lines
     case '/':  // ignore introduction line
-      return;
-    case '!': // abort parsing on terminating line
+    case '!': // ignore terminating line
       return;
   }
 

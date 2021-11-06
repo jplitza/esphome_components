@@ -62,9 +62,10 @@ class OBISComponent : public Component, public uart::UARTDevice {
  protected:
   std::map<std::string, sensor::Sensor *> channels_;
   void handle_line(char *line);
+  char buf[OBIS_BUFSIZE];
+  size_t index{0};
 
  public:
-  void setup() override;
   void loop() override;
   void register_channel(OBISChannel *channel) { this->channels_[channel->channel_] = channel; }
 };
