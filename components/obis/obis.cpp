@@ -25,7 +25,7 @@ namespace obis {
 
 static const char *TAG = "obis";
 
-void OBISComponent::loop() {
+void OBISBase::read_line() {
   while (this->available()) {
     uint8_t byte;
     this->read_byte(&byte);
@@ -44,14 +44,14 @@ void OBISComponent::loop() {
 
       ESP_LOGVV(TAG, "Received: '%s'", this->buf);
       this->handle_line(this->buf);
-      
+
       this->index = 0;
       break;
     }
   }  // available
 }
 
-void OBISComponent::handle_line(char *line) {
+void OBISBase::handle_line(char *line) {
   char *value, *unit, *trailer, *field = line;
   if (line == NULL) {
     ESP_LOGE(TAG, "handle_line() called with NULL pointer");
@@ -119,6 +119,17 @@ void OBISComponent::handle_line(char *line) {
       channel.second->publish_state(fvalue);
     }
   }
+}
+
+void OBISComponent::loop() {
+  read_line();
+}
+
+void PollingOBISComponent::loop() {}
+
+void PollingOBISComponent::update() {
+  write_str(update_payload_.c_str());
+  read_line();
 }
 
 }  // namespace obis

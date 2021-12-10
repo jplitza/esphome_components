@@ -13,6 +13,9 @@ uart:
 
 obis:
   uart_id: uart_bus
+  force_update:  # optional
+    interval: 10
+    payload: "\x2F\x3F\x21\x0D\x0A"
 
 sensor:
   - platform: obis
