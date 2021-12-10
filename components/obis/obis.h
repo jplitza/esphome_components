@@ -81,7 +81,6 @@ class PollingOBISComponent : public PollingComponent, public OBISBase {
 
  public:
   PollingOBISComponent(uint32_t x) : PollingComponent(x) {}
-  void loop() override;
   void update() override;
   void set_update_payload(string update_payload) { update_payload_ = update_payload; }
 };

@@ -125,8 +125,6 @@ void OBISComponent::loop() {
   read_line();
 }
 
-void PollingOBISComponent::loop() {}
-
 void PollingOBISComponent::update() {
   write_str(update_payload_.c_str());
   read_line();
