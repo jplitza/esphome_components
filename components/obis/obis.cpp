@@ -25,6 +25,24 @@ namespace obis {
 
 static const char *TAG = "obis";
 
+void OBISChannel::publish(const char *value) {
+  char *remain;
+  double fvalue = strtod(value, &remain);
+  if (*remain != '\0') {
+    ESP_LOGW(
+      TAG,
+      "Format error: Non-numeric value: %s. "
+      "Ignoring measurement.",
+      value);
+    return;
+  }
+  publish_state(fvalue);
+}
+
+void OBISTextChannel::publish(const char *value) {
+  publish_state(value);
+}
+
 void OBISBase::read_line() {
   while (this->available()) {
     uint8_t byte;
@@ -106,17 +124,7 @@ void OBISBase::handle_line(char *line) {
           unit);
         return;
       }
-      char *remain;
-      double fvalue = strtod(value, &remain);
-      if (*remain != '\0') {
-        ESP_LOGW(
-          TAG,
-          "Format error: Non-numeric value: %s. "
-          "Ignoring measurement.",
-          value);
-        return;
-      }
-      channel.second->publish_state(fvalue);
+      channel.second->publish(value);
     }
   }
 }

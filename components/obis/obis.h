@@ -22,6 +22,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include <map>
 #include <string>
 
@@ -48,26 +49,42 @@ namespace obis {
 
 #define OBIS_BUFSIZE 512
 
-class OBISChannel : public sensor::Sensor {
+class OBISChannelBase {
   friend class OBISBase;
 
  public:
   void set_channel(string channel) { channel_ = channel; }
+  virtual void publish(const char *value) = 0;
+  virtual string get_unit_of_measurement() = 0;
 
  protected:
   string channel_;
 };
 
+class OBISChannel : public sensor::Sensor, public OBISChannelBase {
+  void publish(const char *value) override;
+
+  string get_unit_of_measurement() override {
+    return sensor::Sensor::get_unit_of_measurement();
+  }
+};
+
+class OBISTextChannel : public text_sensor::TextSensor, public OBISChannelBase {
+ public:
+  string get_unit_of_measurement() override { return ""; }
+  void publish(const char *value) override;
+};
+
 class OBISBase : public uart::UARTDevice {
  protected:
-  std::map<std::string, sensor::Sensor *> channels_;
+  std::map<std::string, OBISChannelBase *> channels_;
   void handle_line(char *line);
   char buf[OBIS_BUFSIZE];
   size_t index{0};
 
  public:
   void read_line();
-  void register_channel(OBISChannel *channel) { this->channels_[channel->channel_] = channel; }
+  void register_channel(OBISChannelBase *channel) { this->channels_[channel->channel_] = channel; }
 };
 
 class OBISComponent : public Component, public OBISBase {

@@ -47,3 +47,8 @@ sensor:
     name: "Total Power"
     unit_of_measurement: "W"
     accuracy_decimals: 2
+
+text_sensor:
+  - platform: obis
+    channel: "0-0:96.1.255*255"
+    name: "Serial Number"
