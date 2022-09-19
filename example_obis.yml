@@ -22,31 +22,64 @@ sensor:
     channel: "1-0:1.8.0*255"
     name: "Power Meter"
     unit_of_measurement: "kWh"
-    accuracy_decimals: 7
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    icon: "mdi:speedometer"
+    filters:
+    - throttle: 30s
 
   - platform: obis
     channel: "1-0:21.7.255*255"
     name: "Phase 1 Power"
     unit_of_measurement: "W"
-    accuracy_decimals: 2
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: "mdi:numeric-1-circle"
+    filters:
+    - sliding_window_moving_average:
+        window_size: 5
+        send_every: 5
 
   - platform: obis
     channel: "1-0:41.7.255*255"
     name: "Phase 2 Power"
     unit_of_measurement: "W"
-    accuracy_decimals: 2
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: "mdi:numeric-2-circle"
+    filters:
+    - sliding_window_moving_average:
+        window_size: 5
+        send_every: 5
 
   - platform: obis
     channel: "1-0:61.7.255*255"
     name: "Phase 3 Power"
     unit_of_measurement: "W"
-    accuracy_decimals: 2
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: "mdi:numeric-3-circle"
+    filters:
+    - sliding_window_moving_average:
+        window_size: 5
+        send_every: 5
 
   - platform: obis
     channel: "1-0:1.7.255*255"
     name: "Total Power"
     unit_of_measurement: "W"
-    accuracy_decimals: 2
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: "mdi:flash"
+    filters:
+    - sliding_window_moving_average:
+        window_size: 5
+        send_every: 5
 
 text_sensor:
   - platform: obis
