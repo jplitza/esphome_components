@@ -7,9 +7,19 @@ logger:
 uart:
   id: uart_bus
   rx_pin: GPIO3
+  # Adapt the following three lines to the energy meter you're reading!
   baud_rate: 9600
   data_bits: 7
   parity: ODD
+
+# Some devices need to be triggered to send their data. We can use the
+# integrated "interval" component for that:
+interval:
+  - interval: 10sec
+    then:
+      - uart.write:
+          id: uart_bus
+          data: [0x2F, 0x3F, 0x21, 0x0D, 0x0A]
 
 obis:
   uart_id: uart_bus
