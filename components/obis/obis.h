@@ -50,7 +50,7 @@ namespace obis {
 #define OBIS_BUFSIZE 512
 
 class OBISChannelBase {
-  friend class OBISBase;
+  friend class OBISComponent;
 
  public:
   void set_channel(string channel) { channel_ = channel; }
@@ -75,7 +75,7 @@ class OBISTextChannel : public text_sensor::TextSensor, public OBISChannelBase {
   void publish(const char *value) override;
 };
 
-class OBISBase : public uart::UARTDevice {
+class OBISComponent : public Component, public uart::UARTDevice {
  protected:
   std::map<std::string, OBISChannelBase *> channels_;
   void handle_line(char *line);
@@ -83,23 +83,8 @@ class OBISBase : public uart::UARTDevice {
   size_t index{0};
 
  public:
-  void read_line();
-  void register_channel(OBISChannelBase *channel) { this->channels_[channel->channel_] = channel; }
-};
-
-class OBISComponent : public Component, public OBISBase {
- public:
   void loop() override;
-};
-
-class PollingOBISComponent : public PollingComponent, public OBISBase {
- protected:
-  string update_payload_;
-
- public:
-  PollingOBISComponent(uint32_t x) : PollingComponent(x) {}
-  void update() override;
-  void set_update_payload(string update_payload) { update_payload_ = update_payload; }
+  void register_channel(OBISChannelBase *channel) { this->channels_[channel->channel_] = channel; }
 };
 
 }  // namespace obis

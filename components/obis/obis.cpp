@@ -43,7 +43,7 @@ void OBISTextChannel::publish(const char *value) {
   publish_state(value);
 }
 
-void OBISBase::read_line() {
+void OBISComponent::loop() {
   while (this->available()) {
     uint8_t byte;
     this->read_byte(&byte);
@@ -69,7 +69,7 @@ void OBISBase::read_line() {
   }  // available
 }
 
-void OBISBase::handle_line(char *line) {
+void OBISComponent::handle_line(char *line) {
   char *value, *unit, *trailer, *field = line;
   if (line == NULL) {
     ESP_LOGE(TAG, "handle_line() called with NULL pointer");
@@ -127,15 +127,6 @@ void OBISBase::handle_line(char *line) {
       channel.second->publish(value);
     }
   }
-}
-
-void OBISComponent::loop() {
-  read_line();
-}
-
-void PollingOBISComponent::update() {
-  write_str(update_payload_.c_str());
-  read_line();
 }
 
 }  // namespace obis
