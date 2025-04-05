@@ -60,7 +60,6 @@ void OBISComponent::loop() {
       if (this->buf[this->index - 2] == '\r')
         this->buf[this->index - 2] = '\0';
 
-      ESP_LOGVV(TAG, "Received: '%s'", this->buf);
       this->handle_line(this->buf);
 
       this->index = 0;
@@ -77,9 +76,16 @@ void OBISComponent::handle_line(char *line) {
   }
 
   switch(line[0]) {
-    case '\0': // ignore empty lines
-    case '/':  // ignore introduction line
+    case '/':  // introduction line
+      if (line[1] != '?')
+        for (auto* trigger : opening_triggers_)
+          trigger->trigger();
+      return;
     case '!': // ignore terminating line
+      for (auto* trigger : closing_triggers_)
+        trigger->trigger();
+      return;
+    case '\0': // ignore empty lines
       return;
   }
 

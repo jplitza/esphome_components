@@ -20,6 +20,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/automation.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
@@ -48,6 +49,8 @@ namespace esphome {
 namespace obis {
 
 #define OBIS_BUFSIZE 512
+
+class OBISTrigger : public Trigger<> {};
 
 class OBISChannelBase {
   friend class OBISComponent;
@@ -78,6 +81,9 @@ class OBISTextChannel : public text_sensor::TextSensor, public OBISChannelBase {
 class OBISComponent : public Component, public uart::UARTDevice {
  protected:
   std::map<std::string, OBISChannelBase *> channels_;
+  std::vector<OBISTrigger*> opening_triggers_;
+  std::vector<OBISTrigger*> closing_triggers_;
+
   void handle_line(char *line);
   char buf[OBIS_BUFSIZE];
   size_t index{0};
@@ -85,6 +91,8 @@ class OBISComponent : public Component, public uart::UARTDevice {
  public:
   void loop() override;
   void register_channel(OBISChannelBase *channel) { this->channels_[channel->channel_] = channel; }
+  void register_opening_trigger(OBISTrigger* trigger) { opening_triggers_.push_back(trigger); }
+  void register_closing_trigger(OBISTrigger* trigger) { closing_triggers_.push_back(trigger); }
 };
 
 }  // namespace obis
