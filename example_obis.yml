@@ -7,22 +7,58 @@ logger:
 uart:
   id: uart_bus
   rx_pin: GPIO3
+  tx_pin: GPIO1
   # Adapt the following three lines to the energy meter you're reading!
   baud_rate: 9600
   data_bits: 7
-  parity: ODD
+  parity: EVEN
+  stop_bits: 1
 
 # Some devices need to be triggered to send their data. We can use the
 # integrated "interval" component for that:
 interval:
   - interval: 10sec
     then:
+      - logger.log:
+          format: "Initiating communication at 300 baud"
+          tag: "mt174"
+
+      - lambda: |-
+          if (id(uart_bus).get_baud_rate() != 300) {
+            id(uart_bus).flush();
+            id(uart_bus).set_baud_rate(300);
+            id(uart_bus).load_settings();
+          }
+
+      - delay: 1s
+
       - uart.write:
           id: uart_bus
           data: [0x2F, 0x3F, 0x21, 0x0D, 0x0A]
 
 obis:
   uart_id: uart_bus
+
+  on_opening:
+    then:
+      # The following makes Iskra MT174 output their info at 9600 baud instead
+      # of 300 baud!
+      - logger.log:
+          format: "Received opening, sending ACK"
+          tag: mt174
+
+      - uart.write:
+          id: uart_bus
+          data: [0x06, 0x30, 0x35, 0x30, 0x0D, 0x0A]
+
+      - logger.log:
+          format: "Switching to 9600 baud"
+          tag: mt174
+
+      - lambda: |-
+          id(uart_bus).flush();
+          id(uart_bus).set_baud_rate(9600);
+          id(uart_bus).load_settings();
 
 sensor:
   - platform: obis
