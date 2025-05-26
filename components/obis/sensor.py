@@ -7,7 +7,7 @@ from . import obis_ns, OBISComponent, CONF_OBIS_ID
 DEPENDENCIES = ["obis"]
 OBISChannel = obis_ns.class_("OBISChannel", sensor.Sensor)
 
-CONFIG_SCHEMA = sensor.SENSOR_SCHEMA.extend({
+CONFIG_SCHEMA = sensor.sensor_schema().extend({
     cv.GenerateID(): cv.declare_id(OBISChannel),
     cv.GenerateID(CONF_OBIS_ID): cv.use_id(OBISComponent),
     cv.Required(CONF_CHANNEL): cv.string,

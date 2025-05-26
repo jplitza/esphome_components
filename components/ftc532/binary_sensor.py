@@ -11,7 +11,7 @@ from . import (
 DEPENDENCIES = ["ftc532"]
 FTC532Channel = ftc532_ns.class_("FTC532Channel", binary_sensor.BinarySensor)
 
-CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend({
+CONFIG_SCHEMA = binary_sensor.binary_sensor_schema().extend({
     cv.GenerateID(): cv.declare_id(FTC532Channel),
     cv.GenerateID(CONF_FTC532_ID): cv.use_id(FTC532Component),
     cv.Required(CONF_CHANNEL): cv.int_range(min=0, max=7),

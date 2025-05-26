@@ -7,7 +7,7 @@ from . import obis_ns, OBISComponent, CONF_OBIS_ID
 DEPENDENCIES = ["obis"]
 OBISTextChannel = obis_ns.class_("OBISTextChannel", text_sensor.TextSensor)
 
-CONFIG_SCHEMA = text_sensor.TEXT_SENSOR_SCHEMA.extend({
+CONFIG_SCHEMA = text_sensor.text_sensor_schema().extend({
     cv.GenerateID(): cv.declare_id(OBISTextChannel),
     cv.GenerateID(CONF_OBIS_ID): cv.use_id(OBISComponent),
     cv.Required(CONF_CHANNEL): cv.string,
