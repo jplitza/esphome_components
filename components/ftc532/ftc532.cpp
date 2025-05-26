@@ -38,7 +38,7 @@ void FTC532Component::setup() {
   this->state = FTC532_STATE_WAITING;
   this->pin_->setup();
   this->rxtime = micros();
-  this->pin_->attach_interrupt(FTC532Component::ISR, this, RISING);
+  this->pin_->attach_interrupt<FTC532Component>(FTC532Component::ISR, this, esphome::gpio::INTERRUPT_RISING_EDGE);
 }
 
 

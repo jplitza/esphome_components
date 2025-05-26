@@ -22,7 +22,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
-#include "esphome/core/esphal.h"
+#include "esphome/core/gpio.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 
 namespace esphome {
@@ -59,14 +59,14 @@ class FTC532Channel : public binary_sensor::BinarySensor {
 class FTC532Component : public Component {
  public:
   void register_channel(FTC532Channel *channel) { this->channels_.push_back(channel); }
-  void set_pin(GPIOPin *pin) { pin_ = pin; }
+  void set_pin(InternalGPIOPin *pin) { pin_ = pin; }
   void set_debounce(uint8_t debounce) { debounce_ = debounce; }
   void setup() override;
   void dump_config() override;
   void loop() override;
 
  protected:
-  GPIOPin *pin_;
+  InternalGPIOPin *pin_;
   std::vector<FTC532Channel *> channels_{};
   uint8_t debounce_{0};
 
