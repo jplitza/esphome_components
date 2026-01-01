@@ -58,7 +58,7 @@ class OBISChannelBase {
  public:
   void set_channel(string channel) { channel_ = channel; }
   virtual void publish(const char *value) = 0;
-  virtual string get_unit_of_measurement() = 0;
+  virtual StringRef get_unit_of_measurement_ref() const = 0;
 
  protected:
   string channel_;
@@ -67,14 +67,14 @@ class OBISChannelBase {
 class OBISChannel : public sensor::Sensor, public OBISChannelBase {
   void publish(const char *value) override;
 
-  string get_unit_of_measurement() override {
-    return sensor::Sensor::get_unit_of_measurement();
+  StringRef get_unit_of_measurement_ref() const override {
+    return sensor::Sensor::get_unit_of_measurement_ref();
   }
 };
 
 class OBISTextChannel : public text_sensor::TextSensor, public OBISChannelBase {
  public:
-  string get_unit_of_measurement() override { return ""; }
+  StringRef get_unit_of_measurement_ref() const override { return StringRef::from_lit(""); }
   void publish(const char *value) override;
 };
 

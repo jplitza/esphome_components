@@ -119,14 +119,14 @@ void OBISComponent::handle_line(char *line) {
 
   for (const auto &channel : this->channels_) {
     if (!channel.first.compare(field)) {
-      if (channel.second->get_unit_of_measurement().compare(unit)) {
+      if (channel.second->get_unit_of_measurement_ref() != unit) {
         ESP_LOGW(
           TAG,
           "Unit of measurement mismatch for field '%s': "
           "'%s' is configured, but '%s' was sent. "
           "Ignoring measurement.",
           field,
-          channel.second->get_unit_of_measurement().c_str(),
+          channel.second->get_unit_of_measurement_ref().c_str(),
           unit);
         return;
       }
